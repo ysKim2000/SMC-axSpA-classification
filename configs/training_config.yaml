@@ -1,0 +1,77 @@
+# Training configurations for the published models (Supplementary Table S2).
+# Reference values — the scripts currently set these inline; this file documents
+# the configuration used for the results reported in the paper.
+
+stage1_sij_localization:
+  backbone: YOLOv12x
+  input_resolution: [512, 512]
+  input_channels: 1          # STIR, grayscale
+  optimizer: SGD
+  base_learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  lr_scheduler: cosine_annealing
+  loss: CIoU + DFL + BCE
+  batch_size: 16
+  total_epochs: 100
+  early_stopping_patience: 15
+  checkpoint_selection: ultralytics_validation_fitness
+  augmentation:
+    geometric: [resize_512]
+    intensity: [intensity_color_transforms]
+
+stage1_bme_classification:
+  backbone: ConvNeXt-Large
+  input_resolution: [512, 512]
+  input_channels: 3          # STIR replicated 3x
+  optimizer: AdamW
+  base_learning_rate: 5.0e-6
+  weight_decay: 1.0e-5
+  lr_scheduler: cosine_annealing_warm_restarts
+  loss: hybrid_focal_tversky_bce
+  batch_size: 4
+  classification_threshold: 0.5
+  total_epochs: 300
+  early_stopping_patience: 20
+  checkpoint_selection: lowest_validation_loss
+  augmentation:
+    geometric: [random_rotation_10deg, horizontal_flip]
+    intensity: [histogram_matching]
+
+stage2_axspa_classification:
+  backbone: EfficientNet-B4 + MLP + self-attention
+  input_resolution: [256, 256]
+  slices_per_patient: 12
+  input_channels: FS T1 + STIR (3 channels each) + binary BME predictions
+  optimizer: AdamW
+  base_learning_rate: 3.0e-5
+  weight_decay: 1.0e-4
+  lr_scheduler: cosine_annealing_warm_restarts
+  loss: weighted_bce
+  batch_size: 7              # patients
+  classification_threshold: 0.5
+  total_epochs: 200
+  early_stopping_patience: 20
+  checkpoint_selection: lowest_validation_loss
+  augmentation:
+    geometric: [random_flip, rotation_5deg, affine, perspective, motion, anisotropy]
+    intensity: [histogram_matching, clahe, color_jitter, bias_field, gamma]
+
+preprocessing:
+  normalization: per-slice min-max to 8-bit
+  dicom_windowing: stage2_only      # WindowCenter / WindowWidth
+  histogram_matching:
+    reference: fixed mid-joint slice from the training set (never val/test)
+    stage1_sij: STIR reference, resized 512
+    stage1_bme: STIR reference, resized 512
+    stage2: sequence-specific FS T1 and STIR references, resized 256
+  clahe:
+    stage1_sij:  {impl: skimage.equalize_adapthist, clip_limit: 0.01, kernel_size: 64}
+    stage1_bme:  {impl: cv2.createCLAHE, clip_limit: 2.0, tile_grid: [8, 8]}
+    stage2:      {impl: cv2.createCLAHE, clip_limit: 4.0, tile_grid: [8, 8]}
+
+data_split:
+  strategy: patient-wise, mutually exclusive, stratified by outcome
+  identical_across_tasks: true
+  patients: {total: 291, train: 187, val: 47, test: 57}
+  sij_slices: {total: 2328, train: 1479, val: 370, test: 479}
+  bme_rois:   {total: 4626, train: 2958, val: 740, test: 928}
