@@ -6,7 +6,6 @@ This repository contains the research code for:
 
 > **Artificial intelligence-based decision support for axial spondyloarthritis integrating inflammatory and structural MRI information**
 > Kim Y†, Lee S†, Kang S, Lee J, Chung MJ, Lee JH, Yoo H\*, Cha HS\*
-> *Frontiers in Medicine* (under revision) · †equal contribution · \*corresponding authors
 
 ---
 
@@ -155,18 +154,4 @@ The datasets are not readily available because of strict privacy and ethical res
 
 Trained model weights are likewise not distributed here: checkpoints were produced and stored inside the Samsung Medical Center internal network and cannot be released under the institutional security policy. All performance figures in this README are the values reported in the paper; re-running this code on other data will not reproduce them exactly.
 
-
-
-## Citation
-
-```bibtex
-@article{kim2026axspa,
-  title   = {Artificial intelligence-based decision support for axial spondyloarthritis
-             integrating inflammatory and structural MRI information},
-  author  = {Kim, Yunseo and Lee, Seulkee and Kang, Seonyoung and Lee, Jaejoon and
-             Chung, Myung Jin and Lee, Ji Hyun and Yoo, Hakje and Cha, Hoon-Suk},
-  journal = {Frontiers in Medicine},
-  year    = {2026},
-  note    = {Under revision}
-}
 ```
